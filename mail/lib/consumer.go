@@ -86,7 +86,7 @@ func (m MailConsumer) sendMail(to string, data *model.BankRate) error {
 	message.SetHeader("Subject", "USD Price update")
 	message.SetHeader("From", m.dialer.Username)
 	message.SetHeader("To", to)
-	message.SetBody("text/html", fmt.Sprintf("%s, Buy: %s; Sell: %v", data.Bank, data.Buy, data.Sell))
+	message.SetBody("text/html", fmt.Sprintf("%s, Buy: %v; Sell: %v", data.Bank, data.Buy, data.Sell))
 	if err := m.dialer.DialAndSend(message); err != nil {
 		return err
 	}
