@@ -1,0 +1,69 @@
+services:
+    redis:
+        image: redis/redis-stack:latest
+        ports:
+            - 6379:6379
+            - 8001:8001 
+        healthcheck:
+            test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+    api:
+        build:
+            dockerfile: ./api/Dockerfile
+            context: .
+        entrypoint: ./api
+        environment:
+            REDIS_URL: "redis://redis:6379/0"
+            PORT: "8000"
+        ports:
+            -   8000:8000
+
+    scraper:
+        depends_on:
+            -   redis
+        build:
+            dockerfile: ./scraper/Dockerfile
+            context: .
+        entrypoint: ["node", "scraper.js"]
+        environment:
+            NODE_ENV: "production"
+            REDIS_URL: "redis://redis:6379/0"
+            REDIS_STEAM: "rate:usd"
+    
+    consumer:
+        depends_on:
+            -   scraper
+            -   redis
+        build:
+            dockerfile: ./consumer/Dockerfile
+            context: .
+        entrypoint: "/app/consumer"
+        environment:
+            REDIS_URL: "redis://redis:6379/0"
+            REDIS_STEAM: "rate:usd"
+            CONSUMPTION_GROUP: "usd-rate"
+    mailer: 
+        build:
+            dockerfile: ./mail/Dockerfile
+            context: .
+        entrypoint: "/app/mail"
+        depends_on:
+            -   api
+            -   consumer
+            -   redis
+        environment:
+            REDIS_URL: "redis://redis:6379/0"
+            # Change here            
+            SMTP_USER: $SMTP_USER
+            SMTP_PASS: $SMTP_PASS
+    
+    cron:
+        image: zalari/docker-cron
+        volumes:
+            - ./docker-compose.yml:/cron-env/project/docker-compose.yml
+            - ./db_dump:/cron-env/project/db_dump
+            - /var/run/docker.sock:/var/run/docker.sock
+        environment:
+            - |
+                DOCKER_CRONTAB=
+                0          1       *       *       *    docker run gen_case-scraper 
+                */10       *       *       *       *    docker run gen_case-mailer
