@@ -1,5 +1,6 @@
 
 ### About
+
 This repository contains Practical case for [Software Engineering School 4.0](https://www.genesis-for-univ.com/genesis-software-engineering-school-4).
 The task was to create a simple API to query USD rate and be able to subscribe to updates (1 per/day) on email.
 
@@ -12,16 +13,16 @@ To start application go ahead and export or update in docker-compose your SMTP c
 $ docker compose up
 
 # Get current rate from default bank (for now ПриватБанк)
-$ curl --request GET -sL \
+$ curl --request GET \
      --url 'http://localhost:8000/rate'
 
 # Get current rate from monobank
-$ curl --request GET -sL \
+$ curl --request GET \
      --url 'http://localhost:8000/rate/monobank'
 
 # Subscribe for updated from default bank (as updates send ones per day,
 # the simplest way to trigger update is to restart docker compose without downing it)
-$ curl --request GET -sL \
+$ curl --request GET \
      --url 'http://localhost:8000/subscribe
 
 ```
@@ -34,9 +35,9 @@ $ curl --request GET -sL \
 
 **params**
 
-- *bank* - list can be found on https://minfin.com.ua/ua/currency/banks/usd/
+- *bank* - list can be found on https://minfin.com.ua/ua/currency/banks/usd/, list is updated every 15 min.
  
-Return bank current online and offline(cash) exchange rates
+Return bank current online and cash exchange rates:
 
 ```go
 type BankRate struct {
